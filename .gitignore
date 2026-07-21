@@ -4,6 +4,13 @@ target/
 *.iml
 .vertx/
 /node_modules/
+/product/node_modules/
+/product/**/node_modules/
+/product/**/dist/
+/product/**/.vscode-test/
+/product/deploy/.env
+!/product/github-action/dist/
+!/product/github-action/dist/index.cjs
 dependency-reduced-pom.xml
 .idea
 **/.vscode

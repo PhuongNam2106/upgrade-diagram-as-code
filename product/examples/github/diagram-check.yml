@@ -1,0 +1,21 @@
+name: Diagram check
+
+on:
+  pull_request:
+    paths:
+      - "docs/diagrams/**"
+      - "docs/generated/**"
+      - ".diagramrc.yml"
+      - ".diagram-renderer.lock"
+
+jobs:
+  diagrams:
+    runs-on: [self-hosted, diagram-renderer]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: PhuongNam2106/upgrade-diagram-as-code/product/github-action@product-v0.1.0
+        with:
+          gateway-url: ${{ vars.DIAGRAM_GATEWAY_URL }}
+          api-key: ${{ secrets.DIAGRAM_API_KEY }}

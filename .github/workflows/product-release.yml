@@ -1,0 +1,69 @@
+name: Product Release
+
+on:
+  push:
+    tags:
+      - "product-v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  artifacts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: product/package-lock.json
+      - run: npm ci
+        working-directory: product
+      - run: npm test && npm run typecheck && npm run build
+        working-directory: product
+      - run: npm --workspace=diagram-as-code-vscode run package
+        working-directory: product
+      - name: Create checksums
+        shell: bash
+        run: |
+          sha256sum vscode-extension/dist/diagram-as-code-vscode.vsix > vscode-extension/dist/diagram-as-code-vscode.vsix.sha256
+          sha256sum github-action/dist/index.cjs > github-action/dist/index.cjs.sha256
+        working-directory: product
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}"
+          product/vscode-extension/dist/diagram-as-code-vscode.vsix
+          product/vscode-extension/dist/diagram-as-code-vscode.vsix.sha256
+          product/github-action/dist/index.cjs.sha256
+          --generate-notes
+          --title "${GITHUB_REF_NAME}"
+
+  gateway-image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/diagram-as-code-gateway
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
+      - uses: docker/build-push-action@v7
+        with:
+          context: product
+          file: product/gateway/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
