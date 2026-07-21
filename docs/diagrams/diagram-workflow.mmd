@@ -1,0 +1,11 @@
+flowchart LR
+  Developer[Developer] -->|Edit diagram source| Extension[VS Code extension]
+  Extension -->|POST render request| Gateway[Rendering gateway]
+  Gateway --> Kroki[Kroki renderer]
+  Kroki -->|SVG response| Gateway
+  Gateway -->|Live preview| Extension
+  Extension -->|Manual export| Svg[Generated SVG]
+  Developer -->|Commit source and SVG| Git[Git repository]
+  Git --> Action[GitHub Action]
+  Action -->|Verify committed SVG| Gateway
+  Action --> Check[Pull request check]

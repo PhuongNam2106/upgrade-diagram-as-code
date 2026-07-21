@@ -1,0 +1,19 @@
+version: 1
+server:
+  url: http://localhost:9000
+  apiKeyEnv: DIAGRAM_API_KEY
+sources:
+  directory: docs/diagrams
+  include:
+    - "**/*.mmd"
+    - "**/*.puml"
+    - "**/*.dot"
+    - "**/*.d2"
+output:
+  directory: docs/generated
+  format: svg
+preview:
+  debounceMs: 600
+render:
+  onSave: changed
+  exportOnSave: false
