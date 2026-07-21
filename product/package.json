@@ -12,6 +12,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "pretypecheck": "npm --workspace=@diagram-as-code/contracts run build && npm --workspace=@diagram-as-code/diagram-config run build",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "smoke": "node scripts/smoke-test.mjs"
   },
