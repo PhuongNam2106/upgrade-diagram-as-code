@@ -22,7 +22,7 @@ outputs:
   stale-count:
     description: Number of stale or orphaned SVG files.
 runs:
-  using: node20
+  using: node24
   main: dist/index.cjs
 branding:
   icon: image
