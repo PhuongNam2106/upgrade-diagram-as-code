@@ -35,20 +35,42 @@
     "esbuild": "^0.25.0"
   },
   "activationEvents": [
+    "onLanguage:diagram-mermaid",
+    "onLanguage:diagram-plantuml",
+    "onLanguage:diagram-dot",
+    "onLanguage:diagram-d2",
     "onCommand:diagramAsCode.preview",
     "onCommand:diagramAsCode.exportSvg",
+    "onCommand:diagramAsCode.refreshPreview",
+    "onCommand:diagramAsCode.exportPreviewSvg",
     "onCommand:diagramAsCode.setApiKey"
   ],
   "contributes": {
     "commands": [
-      { "command": "diagramAsCode.preview", "title": "Diagram: Open Preview", "icon": "$(open-preview)" },
+      { "command": "diagramAsCode.preview", "title": "Diagram: Open Preview", "icon": "$(eye)" },
       { "command": "diagramAsCode.exportSvg", "title": "Diagram: Export SVG", "icon": "$(export)" },
+      { "command": "diagramAsCode.refreshPreview", "title": "Diagram: Refresh Preview", "icon": "$(refresh)" },
+      { "command": "diagramAsCode.exportPreviewSvg", "title": "Diagram: Export Preview as SVG", "icon": "$(export)" },
       { "command": "diagramAsCode.setApiKey", "title": "Diagram: Set Gateway API Key", "icon": "$(key)" }
     ],
     "menus": {
       "editor/title": [
-        { "command": "diagramAsCode.preview", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "navigation@10" },
-        { "command": "diagramAsCode.exportSvg", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "navigation@11" }
+        { "command": "diagramAsCode.preview", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "navigation@1" },
+        { "command": "diagramAsCode.exportSvg", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "navigation@2" }
+      ],
+      "webview/title": [
+        { "command": "diagramAsCode.refreshPreview", "when": "webviewType == diagramAsCode.preview", "group": "navigation@1" },
+        { "command": "diagramAsCode.exportPreviewSvg", "when": "webviewType == diagramAsCode.preview", "group": "navigation@2" }
+      ],
+      "editor/context": [
+        { "command": "diagramAsCode.preview", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@1" },
+        { "command": "diagramAsCode.exportSvg", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@2" },
+        { "command": "diagramAsCode.setApiKey", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@3" }
+      ],
+      "explorer/context": [
+        { "command": "diagramAsCode.preview", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@1" },
+        { "command": "diagramAsCode.exportSvg", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@2" },
+        { "command": "diagramAsCode.setApiKey", "when": "resourceExtname == .mmd || resourceExtname == .puml || resourceExtname == .dot || resourceExtname == .d2", "group": "diagram@3" }
       ]
     },
     "languages": [

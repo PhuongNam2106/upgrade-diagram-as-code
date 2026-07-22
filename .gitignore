@@ -8,6 +8,7 @@ target/
 /product/**/node_modules/
 /product/**/dist/
 /product/**/.vscode-test/
+/product/release/
 /product/deploy/.env
 !/product/github-action/dist/
 !/product/github-action/dist/index.cjs

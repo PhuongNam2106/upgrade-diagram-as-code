@@ -19,7 +19,7 @@ Developer sửa file trong `docs/diagrams`, mở preview và dùng `Diagram: Exp
 4. Copy `product/.diagramrc.example.yml` thành `.diagramrc.yml` ở repo sử dụng.
 5. Build/cài VSIX từ `product/vscode-extension/dist/diagram-as-code-vscode.vsix`.
 
-Các quy trình TLS, key rotation, update và rollback nằm trong [Infrastructure and Operations](docs/infrastructure-operations.md).
+Các quy trình TLS, key rotation, update và rollback nằm trong [Infrastructure and Operations](docs/infrastructure-operations.md). Quy trình đóng gói, phát hành và rollback version nằm trong [Release Guide](docs/release-guide.md).
 
 ## Phạm vi MVP
 

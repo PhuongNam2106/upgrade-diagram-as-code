@@ -5,7 +5,7 @@ flowchart LR
   Kroki -->|SVG response| Gateway
   Gateway -->|Live preview| Extension
   Extension -->|Manual export| Svg[Generated SVG]
-  Developer -->|Commit source and SVG| Git[Git repository]
-  Git --> Action[GitHub Action]
+  Developer-test-not-save -->|Commit source and SVG| Git[Git repository]
+  GitNamTesst --> Action[GitHub Actionqqqqq]
   Action -->|Verify committed SVG| Gateway
   Action --> Check[Pull request check]

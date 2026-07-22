@@ -10,6 +10,8 @@ The extension previews `.mmd`, `.puml`, `.dot`, and `.d2` files through a config
 
 Preview waits for the configured debounce interval, cancels superseded requests, and reuses a matching render when exporting. Saving does not download or create an SVG; export remains an explicit command.
 
+When a supported diagram file is active, labeled `Preview` and `Export` buttons appear in the VS Code status bar. Icon buttons also appear in the diagram editor title, while an active preview has refresh and export buttons in its title bar. The same commands are available by right-clicking supported files in the editor or Explorer.
+
 ## Project configuration
 
 Add `.diagramrc.yml` at the workspace root. See `product/.diagramrc.example.yml` in the repository. The API key can come from the configured environment variable or VS Code SecretStorage.
