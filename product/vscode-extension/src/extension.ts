@@ -63,11 +63,12 @@ class PreviewSession implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor(
-    private readonly document: vscode.TextDocument,
+    readonly document: vscode.TextDocument,
     private readonly panel: vscode.WebviewPanel,
     private readonly renderDocument: (document: vscode.TextDocument) => Promise<string>,
     private readonly debounceMs: number,
     onDispose: () => void,
+    onActivate: () => void,
   ) {
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
@@ -79,6 +80,9 @@ class PreviewSession implements vscode.Disposable {
       panel.onDidDispose(() => {
         onDispose();
         this.dispose();
+      }),
+      panel.onDidChangeViewState((event) => {
+        if (event.webviewPanel.active) onActivate();
       }),
     );
   }
@@ -115,6 +119,7 @@ class PreviewSession implements vscode.Disposable {
 class DiagramController implements vscode.Disposable {
   private readonly sessions = new Map<string, PreviewSession>();
   private readonly coordinators = new Map<string, { fingerprint: string; coordinator: RenderCoordinator }>();
+  private activePreviewResource: string | undefined;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -163,10 +168,22 @@ class DiagramController implements vscode.Disposable {
       panel,
       (current) => this.render(current),
       project.config.preview.debounceMs,
-      () => this.sessions.delete(resource),
+      () => {
+        this.sessions.delete(resource);
+        if (this.activePreviewResource === resource) this.activePreviewResource = undefined;
+      },
+      () => { this.activePreviewResource = resource; },
     );
     this.sessions.set(resource, session);
     session.schedule(0);
+  }
+
+  async refreshActivePreview(): Promise<void> {
+    this.activePreviewSession().schedule(0);
+  }
+
+  async exportActivePreview(): Promise<void> {
+    await this.export(this.activePreviewSession().document);
   }
 
   async export(document: vscode.TextDocument): Promise<void> {
@@ -196,12 +213,71 @@ class DiagramController implements vscode.Disposable {
     this.sessions.clear();
     this.coordinators.clear();
   }
+
+  private activePreviewSession(): PreviewSession {
+    const session = this.activePreviewResource
+      ? this.sessions.get(this.activePreviewResource)
+      : undefined;
+    if (!session) throw new Error("Focus a Diagram as Code preview first");
+    return session;
+  }
+}
+
+class DiagramStatusBar implements vscode.Disposable {
+  private readonly previewItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    101,
+  );
+  private readonly exportItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100,
+  );
+  private readonly editorListener: vscode.Disposable;
+
+  constructor() {
+    this.previewItem.name = "Diagram Preview";
+    this.previewItem.text = "$(eye) Preview";
+    this.previewItem.tooltip = "Open Diagram Preview";
+    this.previewItem.command = "diagramAsCode.preview";
+
+    this.exportItem.name = "Diagram Export";
+    this.exportItem.text = "$(export) Export";
+    this.exportItem.tooltip = "Export Diagram as SVG";
+    this.exportItem.command = "diagramAsCode.exportSvg";
+
+    this.editorListener = vscode.window.onDidChangeActiveTextEditor(() => this.update());
+    this.update();
+  }
+
+  dispose(): void {
+    this.editorListener.dispose();
+    this.previewItem.dispose();
+    this.exportItem.dispose();
+  }
+
+  private update(): void {
+    const filePath = vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (filePath && detectDiagramType(filePath)) {
+      this.previewItem.show();
+      this.exportItem.show();
+      return;
+    }
+    this.previewItem.hide();
+    this.exportItem.hide();
+  }
 }
 
 function activeDocument(): vscode.TextDocument {
   const document = vscode.window.activeTextEditor?.document;
   if (!document) throw new Error("Open a diagram source file first");
   return document;
+}
+
+async function commandDocument(resource?: vscode.Uri): Promise<vscode.TextDocument> {
+  if (!resource) return activeDocument();
+  const active = vscode.window.activeTextEditor?.document;
+  if (active?.uri.toString() === resource.toString()) return active;
+  return vscode.workspace.openTextDocument(resource);
 }
 
 async function showCommandError(action: () => Promise<void>): Promise<void> {
@@ -214,17 +290,25 @@ async function showCommandError(action: () => Promise<void>): Promise<void> {
 
 export function activate(context: vscode.ExtensionContext): void {
   const controller = new DiagramController(context);
+  const statusBar = new DiagramStatusBar();
   context.subscriptions.push(
     controller,
-    vscode.commands.registerCommand("diagramAsCode.preview", () =>
-      showCommandError(() => controller.preview(activeDocument())),
+    statusBar,
+    vscode.commands.registerCommand("diagramAsCode.preview", (resource?: vscode.Uri) =>
+      showCommandError(async () => controller.preview(await commandDocument(resource))),
     ),
-    vscode.commands.registerCommand("diagramAsCode.exportSvg", () =>
-      showCommandError(() => controller.export(activeDocument())),
+    vscode.commands.registerCommand("diagramAsCode.exportSvg", (resource?: vscode.Uri) =>
+      showCommandError(async () => controller.export(await commandDocument(resource))),
     ),
-    vscode.commands.registerCommand("diagramAsCode.setApiKey", () =>
+    vscode.commands.registerCommand("diagramAsCode.refreshPreview", () =>
+      showCommandError(() => controller.refreshActivePreview()),
+    ),
+    vscode.commands.registerCommand("diagramAsCode.exportPreviewSvg", () =>
+      showCommandError(() => controller.exportActivePreview()),
+    ),
+    vscode.commands.registerCommand("diagramAsCode.setApiKey", (resource?: vscode.Uri) =>
       showCommandError(async () => {
-        const document = activeDocument();
+        const document = await commandDocument(resource);
         const project = await readProjectContext(context, document);
         const apiKey = await vscode.window.showInputBox({
           title: "Diagram Gateway API Key",

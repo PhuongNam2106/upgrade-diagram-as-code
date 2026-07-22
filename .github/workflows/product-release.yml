@@ -21,25 +21,24 @@ jobs:
           cache-dependency-path: product/package-lock.json
       - run: npm ci
         working-directory: product
-      - run: npm test && npm run typecheck && npm run build
-        working-directory: product
-      - run: npm --workspace=diagram-as-code-vscode run package
-        working-directory: product
-      - name: Create checksums
-        shell: bash
-        run: |
-          sha256sum vscode-extension/dist/diagram-as-code-vscode.vsix > vscode-extension/dist/diagram-as-code-vscode.vsix.sha256
-          sha256sum github-action/dist/index.cjs > github-action/dist/index.cjs.sha256
+      - name: Verify and prepare release artifacts
+        run: npm run release:prepare
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
         working-directory: product
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh release create "${GITHUB_REF_NAME}"
-          product/vscode-extension/dist/diagram-as-code-vscode.vsix
-          product/vscode-extension/dist/diagram-as-code-vscode.vsix.sha256
-          product/github-action/dist/index.cjs.sha256
-          --generate-notes
+          product/release/${GITHUB_REF_NAME}/diagram-as-code-vscode-*.vsix
+          product/release/${GITHUB_REF_NAME}/diagram-as-code-action-*.cjs
+          product/release/${GITHUB_REF_NAME}/docker-compose.yml
+          product/release/${GITHUB_REF_NAME}/diagram-as-code.env.example
+          product/release/${GITHUB_REF_NAME}/diagramrc.example.yml
+          product/release/${GITHUB_REF_NAME}/manifest.json
+          product/release/${GITHUB_REF_NAME}/SHA256SUMS
+          --notes-file product/release/${GITHUB_REF_NAME}/RELEASE_NOTES.md
           --title "${GITHUB_REF_NAME}"
 
   gateway-image:
