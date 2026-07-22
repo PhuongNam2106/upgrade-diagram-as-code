@@ -9,6 +9,7 @@ on:
 
 jobs:
   trigger_publish:
+    if: github.repository == 'yuzutech/kroki'
     runs-on: ubuntu-latest
 
     steps:
