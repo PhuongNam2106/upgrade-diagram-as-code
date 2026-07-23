@@ -164,6 +164,27 @@ Describe "Invoke-DiagramDocker" {
 
         [string]::Join("", $output) | Should -Match "^\d+\.\d+\.\d+"
     }
+
+    It "does not treat successful stderr progress as a Docker failure" {
+        $fakeBin = Join-Path $TestDrive "fake-docker-bin"
+        New-Item -ItemType Directory -Path $fakeBin | Out-Null
+        @"
+@echo off
+echo Image yuzutech/kroki-mermaid:0.31.1 Pulling 1>&2
+exit /b 0
+"@ | Set-Content -LiteralPath (Join-Path $fakeBin "docker.cmd") -Encoding Ascii
+
+        $previousPath = $env:PATH
+        try {
+            $env:PATH = "$fakeBin;$previousPath"
+            { $script:dockerProgress = Invoke-DiagramDocker -Arguments @("compose", "pull") -WorkingDirectory $TestDrive } |
+                Should -Not -Throw
+            [string]::Join("", $script:dockerProgress) | Should -Match "Pulling"
+        }
+        finally {
+            $env:PATH = $previousPath
+        }
+    }
 }
 
 Describe "Install-DiagramServer" {

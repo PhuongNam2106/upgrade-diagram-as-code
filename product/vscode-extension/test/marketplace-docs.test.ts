@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
-const changelog = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8");
+const changelog = readFileSync(
+  new URL("../CHANGELOG.md", import.meta.url),
+  "utf8",
+);
 
 test("Marketplace README documents installation and the complete user flow", () => {
   for (const heading of [
@@ -26,8 +29,8 @@ test("Marketplace README documents installation and the complete user flow", () 
   assert.doesNotMatch(readme, /!\[[^\]]*\]\([^)]*\.svg\)/i);
 });
 
-test("changelog contains the 0.2.0 Marketplace release", () => {
-  assert.match(changelog, /^## 0\.2\.0$/m);
+test("changelog contains the 0.2.1 Marketplace patch release", () => {
+  assert.match(changelog, /^## 0\.2\.1$/m);
   assert.match(changelog, /Visual Studio Marketplace/);
   assert.match(changelog, /phuongnam\.diagram-as-code-vscode/);
 });

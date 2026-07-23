@@ -6,6 +6,13 @@ import test from "node:test";
 const repositoryRoot = path.resolve(import.meta.dirname, "..", "..");
 
 test("release documentation covers Windows and Marketplace delivery", async () => {
+  const productManifest = JSON.parse(
+    await readFile(
+      path.join(repositoryRoot, "product", "package.json"),
+      "utf8",
+    ),
+  );
+  const version = productManifest.version;
   const releaseGuide = await readFile(
     path.join(repositoryRoot, "product", "docs", "release-guide.md"),
     "utf8",
@@ -20,8 +27,8 @@ test("release documentation covers Windows and Marketplace delivery", async () =
   );
 
   for (const marker of [
-    "diagram-as-code-server-0.2.0.zip",
-    "product-v0.2.0",
+    `diagram-as-code-server-${version}.zip`,
+    `product-v${version}`,
     "phuongnam",
     "SHA256SUMS",
     "GHCR",
@@ -30,6 +37,7 @@ test("release documentation covers Windows and Marketplace delivery", async () =
   }
 
   assert.match(productReadme, /Windows Server/i);
+  assert.match(productReadme, new RegExp(`product-v${version}`, "i"));
   assert.match(productReadme, /Visual Studio Marketplace/i);
   assert.match(techDoc, /Docker Desktop/i);
   assert.match(techDoc, /GHCR/i);
