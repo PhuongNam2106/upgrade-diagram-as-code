@@ -46872,6 +46872,7 @@ var import_fast_glob = __toESM(require_out4(), 1);
 
 // src/core.ts
 var import_node_path2 = __toESM(require("node:path"), 1);
+var import_node_crypto = require("node:crypto");
 
 // ../packages/contracts/dist/index.js
 var import_node_path = require("node:path");
@@ -48750,6 +48751,86 @@ function buildVerificationPlan(changes, allSources, config2, forceAll) {
 function deterministicRequest(sourcePath, source) {
   return createRenderRequest(sourcePath, source);
 }
+function pullRequestContextFromEvent(event, repository, serverUrl) {
+  if (!repository) return void 0;
+  const pullRequest = event?.pull_request;
+  const number4 = pullRequest?.number;
+  const baseSha = pullRequest?.base?.sha;
+  const headSha = pullRequest?.head?.sha;
+  if (!number4 || !baseSha || !headSha) return void 0;
+  return {
+    repository,
+    serverUrl: serverUrl ?? "https://github.com",
+    number: number4,
+    baseSha,
+    headSha
+  };
+}
+function encodedPath(filePath) {
+  return normalize(filePath).split("/").map(encodeURIComponent).join("/");
+}
+function blobUrl(context, sha, filePath) {
+  return `${context.serverUrl}/${context.repository}/blob/${sha}/${encodedPath(filePath)}`;
+}
+function markdownLink(label, url2) {
+  return `[${label}](${url2})`;
+}
+function pullRequestFileUrl(context, filePath) {
+  const hash2 = (0, import_node_crypto.createHash)("sha256").update(normalize(filePath)).digest("hex");
+  return `${context.serverUrl}/${context.repository}/pull/${context.number}/files#diff-${hash2}`;
+}
+function buildDiagramReviewRows(plan, changes, context) {
+  const normalizedChanges = changes.map((change) => ({
+    ...change,
+    path: normalize(change.path),
+    oldPath: change.oldPath ? normalize(change.oldPath) : void 0
+  }));
+  const changeByPath = new Map(normalizedChanges.map((change) => [change.path, change]));
+  const renameByNewPath = new Map(normalizedChanges.filter((change) => change.status === "R").map((change) => [change.path, change]));
+  const renameByOldPath = new Map(
+    normalizedChanges.filter((change) => change.status === "R" && Boolean(change.oldPath)).map((change) => [change.oldPath, change])
+  );
+  const itemBySource = new Map(plan.map((item) => [normalize(item.sourcePath), item]));
+  return plan.flatMap((item) => {
+    const sourcePath = normalize(item.sourcePath);
+    const outputPath2 = normalize(item.outputPath);
+    const renameFromOldPath = renameByOldPath.get(sourcePath);
+    if (item.operation === "remove" && renameFromOldPath) return [];
+    const renameToNewPath = renameByNewPath.get(sourcePath);
+    if (renameToNewPath?.oldPath) {
+      const oldItem = itemBySource.get(renameToNewPath.oldPath);
+      const oldOutputPath = oldItem?.outputPath ?? outputPath2;
+      return [{
+        status: "renamed",
+        source: markdownLink(sourcePath, blobUrl(context, context.headSha, sourcePath)),
+        generatedSvg: markdownLink(outputPath2, blobUrl(context, context.headSha, outputPath2)),
+        before: markdownLink("base", blobUrl(context, context.baseSha, oldOutputPath)),
+        after: markdownLink("head", blobUrl(context, context.headSha, outputPath2)),
+        visualDiff: markdownLink("open", pullRequestFileUrl(context, outputPath2))
+      }];
+    }
+    const change = changeByPath.get(sourcePath) ?? changeByPath.get(outputPath2);
+    if (item.operation === "remove") {
+      return [{
+        status: "deleted",
+        source: markdownLink(sourcePath, blobUrl(context, context.baseSha, sourcePath)),
+        generatedSvg: markdownLink(outputPath2, blobUrl(context, context.baseSha, outputPath2)),
+        before: markdownLink("base", blobUrl(context, context.baseSha, outputPath2)),
+        after: "",
+        visualDiff: markdownLink("open", pullRequestFileUrl(context, outputPath2))
+      }];
+    }
+    const status = change?.status === "A" ? "added" : change?.status === "M" ? "modified" : "verified";
+    return [{
+      status,
+      source: markdownLink(sourcePath, blobUrl(context, context.headSha, sourcePath)),
+      generatedSvg: markdownLink(outputPath2, blobUrl(context, context.headSha, outputPath2)),
+      before: status === "added" ? "" : markdownLink("base", blobUrl(context, context.baseSha, outputPath2)),
+      after: markdownLink("head", blobUrl(context, context.headSha, outputPath2)),
+      visualDiff: markdownLink("open", pullRequestFileUrl(context, outputPath2))
+    }];
+  });
+}
 function parseNameStatus(output) {
   const changes = [];
   for (const line of output.split(/\r?\n/).filter(Boolean)) {
@@ -48795,14 +48876,16 @@ async function render(baseUrl, apiKey, request) {
   }
   return body;
 }
-function pullRequestFilesUrl() {
+function readPullRequestContext() {
   const repository = process.env.GITHUB_REPOSITORY;
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!repository || !eventPath || !(0, import_node_fs.existsSync)(eventPath)) return void 0;
   try {
-    const event = JSON.parse((0, import_node_fs.readFileSync)(eventPath, "utf8"));
-    const number4 = event.pull_request?.number;
-    return number4 ? `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${repository}/pull/${number4}/files` : void 0;
+    return pullRequestContextFromEvent(
+      JSON.parse((0, import_node_fs.readFileSync)(eventPath, "utf8")),
+      repository,
+      process.env.GITHUB_SERVER_URL ?? "https://github.com"
+    );
   } catch {
     return void 0;
   }
@@ -48842,19 +48925,38 @@ async function run() {
   }
   setOutput("checked-count", plan.filter((item) => item.operation === "verify").length);
   setOutput("stale-count", stale.length);
-  await summary.addHeading("Diagram as Code").addRaw(
+  const pullRequestContext = readPullRequestContext();
+  const summary2 = summary.addHeading("Diagram as Code").addRaw(
     stale.length === 0 ? `All ${plan.length} planned diagram artifact(s) are current.
 ` : `${stale.length} generated SVG artifact(s) need attention.
 `
-  ).write();
-  if (stale.length > 0) {
-    const filesUrl = pullRequestFilesUrl();
-    const rows = stale.map((item) => [item.reason, `\`${item.sourcePath}\``, `\`${item.outputPath}\``]);
-    await summary.addTable([[{ data: "Status", header: true }, { data: "Source", header: true }, { data: "Generated SVG", header: true }], ...rows]).addRaw(filesUrl ? `
-[Open the pull request image diff](${filesUrl})
-` : "").write();
-    setFailed("Generated diagrams are missing, stale, or should be removed. Export the SVGs in VS Code and commit them.");
+  );
+  if (pullRequestContext && plan.length > 0) {
+    const reviewRows = buildDiagramReviewRows(plan, changes ?? [], pullRequestContext);
+    if (reviewRows.length > 0) {
+      summary2.addRaw("\n## Review changed diagrams\n").addTable([
+        [
+          { data: "Status", header: true },
+          { data: "Source", header: true },
+          { data: "Generated SVG", header: true },
+          { data: "Before", header: true },
+          { data: "After", header: true },
+          { data: "Visual diff", header: true }
+        ],
+        ...reviewRows.map((row) => [row.status, row.source, row.generatedSvg, row.before, row.after, row.visualDiff])
+      ]);
+    }
   }
+  if (stale.length > 0) {
+    const rows = stale.map((item) => [item.reason, `\`${item.sourcePath}\``, `\`${item.outputPath}\``]);
+    summary2.addRaw("\n## Files needing attention\n").addTable([[{ data: "Status", header: true }, { data: "Source", header: true }, { data: "Generated SVG", header: true }], ...rows]).addRaw(pullRequestContext ? `
+[Open all changed files](${pullRequestContext.serverUrl}/${pullRequestContext.repository}/pull/${pullRequestContext.number}/files)
+` : "");
+    await summary2.write();
+    setFailed("Generated diagrams are missing, stale, or should be removed. Export the SVGs in VS Code and commit them.");
+    return;
+  }
+  await summary2.write();
 }
 run().catch((error52) => {
   setFailed(error52 instanceof Error ? error52.message : String(error52));

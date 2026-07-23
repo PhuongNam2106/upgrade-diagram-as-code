@@ -7,10 +7,13 @@ import { parseDiagramConfig } from "@diagram-as-code/diagram-config";
 import fastGlob from "fast-glob";
 
 import {
+  buildDiagramReviewRows,
   buildVerificationPlan,
   deterministicRequest,
   parseNameStatus,
+  pullRequestContextFromEvent,
   type FileChange,
+  type PullRequestContext,
 } from "./core.js";
 
 interface StaleDiagram {
@@ -50,14 +53,16 @@ async function render(baseUrl: string, apiKey: string, request: ReturnType<typeo
   return body;
 }
 
-function pullRequestFilesUrl(): string | undefined {
+function readPullRequestContext(): PullRequestContext | undefined {
   const repository = process.env.GITHUB_REPOSITORY;
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!repository || !eventPath || !existsSync(eventPath)) return undefined;
   try {
-    const event = JSON.parse(readFileSync(eventPath, "utf8")) as { pull_request?: { number?: number } };
-    const number = event.pull_request?.number;
-    return number ? `${process.env.GITHUB_SERVER_URL ?? "https://github.com"}/${repository}/pull/${number}/files` : undefined;
+    return pullRequestContextFromEvent(
+      JSON.parse(readFileSync(eventPath, "utf8")),
+      repository,
+      process.env.GITHUB_SERVER_URL ?? "https://github.com",
+    );
   } catch {
     return undefined;
   }
@@ -102,21 +107,44 @@ async function run(): Promise<void> {
 
   core.setOutput("checked-count", plan.filter((item) => item.operation === "verify").length);
   core.setOutput("stale-count", stale.length);
-  await core.summary.addHeading("Diagram as Code").addRaw(
+  const pullRequestContext = readPullRequestContext();
+  const summary = core.summary.addHeading("Diagram as Code").addRaw(
     stale.length === 0
       ? `All ${plan.length} planned diagram artifact(s) are current.\n`
       : `${stale.length} generated SVG artifact(s) need attention.\n`,
-  ).write();
+  );
+
+  if (pullRequestContext && plan.length > 0) {
+    const reviewRows = buildDiagramReviewRows(plan, changes ?? [], pullRequestContext);
+    if (reviewRows.length > 0) {
+      summary
+        .addRaw("\n## Review changed diagrams\n")
+        .addTable([
+          [
+            { data: "Status", header: true },
+            { data: "Source", header: true },
+            { data: "Generated SVG", header: true },
+            { data: "Before", header: true },
+            { data: "After", header: true },
+            { data: "Visual diff", header: true },
+          ],
+          ...reviewRows.map((row) => [row.status, row.source, row.generatedSvg, row.before, row.after, row.visualDiff]),
+        ]);
+    }
+  }
 
   if (stale.length > 0) {
-    const filesUrl = pullRequestFilesUrl();
     const rows = stale.map((item) => [item.reason, `\`${item.sourcePath}\``, `\`${item.outputPath}\``]);
-    await core.summary
+    summary
+      .addRaw("\n## Files needing attention\n")
       .addTable([[{ data: "Status", header: true }, { data: "Source", header: true }, { data: "Generated SVG", header: true }], ...rows])
-      .addRaw(filesUrl ? `\n[Open the pull request image diff](${filesUrl})\n` : "")
-      .write();
+      .addRaw(pullRequestContext ? `\n[Open all changed files](${pullRequestContext.serverUrl}/${pullRequestContext.repository}/pull/${pullRequestContext.number}/files)\n` : "");
+    await summary.write();
     core.setFailed("Generated diagrams are missing, stale, or should be removed. Export the SVGs in VS Code and commit them.");
+    return;
   }
+
+  await summary.write();
 }
 
 run().catch((error: unknown) => {
