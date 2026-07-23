@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { detectDiagramType, type RenderRequest } from "@diagram-as-code/contracts";
+import { createRenderRequest, detectDiagramType, type RenderRequest } from "@diagram-as-code/contracts";
 import type { DiagramConfig } from "@diagram-as-code/diagram-config";
 import { minimatch } from "minimatch";
 
@@ -77,24 +77,7 @@ export function buildVerificationPlan(
 }
 
 export function deterministicRequest(sourcePath: string, source: string): RenderRequest {
-  const type = detectDiagramType(sourcePath);
-  if (!type) throw new Error(`Unsupported diagram source: ${sourcePath}`);
-
-  if (type === "mermaid") {
-    return {
-      type,
-      format: "svg",
-      source,
-      options: {
-        "deterministic-ids": true,
-        "deterministic-id-seed": normalize(sourcePath),
-      },
-    };
-  }
-  if (type === "plantuml") {
-    return { type, format: "svg", source, options: { "no-metadata": true } };
-  }
-  return { type, format: "svg", source };
+  return createRenderRequest(sourcePath, source);
 }
 
 export function parseNameStatus(output: string): FileChange[] {

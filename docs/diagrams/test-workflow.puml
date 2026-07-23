@@ -1,0 +1,22 @@
+@startuml
+title Diagram as Code - Luồng Preview và Export
+
+autonumber
+
+actor "Nguyễn Nam" as User
+participant "VS Code Extension" as Extension
+participant "Gateway" as Gateway
+participant "Kroki / PlantUML" as Renderer
+
+User -> Extension: Mở file test-workflow.puml
+User -> Extension: Bấm Preview
+Extension -> Gateway: POST /v1/render\n(type: plantuml, format: svg)
+Gateway -> Renderer: Gửi mã PlantUML
+Renderer --> Gateway: Trả về ảnh SVG
+Gateway --> Extension: Trả về ảnh SVG
+Extension --> User: Hiển thị bản xem trước
+
+User -> Extension: Bấm Export
+Extension --> User: Lưu file test-workflow.svg
+
+@enduml

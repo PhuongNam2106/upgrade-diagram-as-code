@@ -10,8 +10,51 @@ permissions:
   contents: read
 
 jobs:
-  diagrams:
-    name: Verify generated diagrams
+  changes:
+    name: Detect diagram changes
+    runs-on: ubuntu-24.04
+    outputs:
+      diagrams: ${{ steps.filter.outputs.diagrams }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Classify changed files
+        id: filter
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          diagrams=false
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            diagrams=true
+          else
+            if [[ -z "$BASE_SHA" ]] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+              echo "Cannot resolve the pull request base commit" >&2
+              exit 1
+            fi
+
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files.txt"
+            while IFS= read -r file; do
+              case "$file" in
+                .diagramrc.yml|.diagram-renderer.lock|docs/diagrams/*|docs/generated/*|product/github-action/*|product/packages/contracts/*|product/packages/diagram-config/*|.github/workflows/diagram-check.yml)
+                  diagrams=true
+                  break
+                  ;;
+              esac
+            done < "$RUNNER_TEMP/changed-files.txt"
+          fi
+
+          echo "diagrams=$diagrams" >> "$GITHUB_OUTPUT"
+          echo "Diagram verification required: $diagrams"
+
+  render:
+    name: Render changed diagrams
+    needs: changes
+    if: needs.changes.outputs.diagrams == 'true'
     runs-on: [self-hosted, Windows, X64, diagram-renderer]
     timeout-minutes: 10
     steps:
@@ -25,3 +68,32 @@ jobs:
           api-key: ${{ secrets.DIAGRAM_API_KEY }}
           config-path: .diagramrc.yml
           changed-only: ${{ github.event_name == 'pull_request' }}
+
+  diagrams:
+    name: Verify generated diagrams
+    needs: [changes, render]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Report verification result
+        shell: bash
+        env:
+          DETECTION_RESULT: ${{ needs.changes.result }}
+          DIAGRAMS_CHANGED: ${{ needs.changes.outputs.diagrams }}
+          RENDER_RESULT: ${{ needs.render.result }}
+        run: |
+          if [[ "$DETECTION_RESULT" != "success" ]]; then
+            echo "Diagram change detection failed" >&2
+            exit 1
+          fi
+
+          if [[ "$DIAGRAMS_CHANGED" == "true" && "$RENDER_RESULT" != "success" ]]; then
+            echo "Diagram rendering did not complete successfully: $RENDER_RESULT" >&2
+            exit 1
+          fi
+
+          if [[ "$DIAGRAMS_CHANGED" == "true" ]]; then
+            echo "Changed diagrams were verified successfully"
+          else
+            echo "No diagram-related files changed; self-hosted rendering was skipped"
+          fi
