@@ -1,17 +1,42 @@
-# Diagram as Code for VS Code
+# Diagram as Code
 
-The extension previews `.mmd`, `.puml`, `.dot`, and `.d2` files through a configured Diagram as Code Gateway and exports one canonical SVG per source.
+Preview Mermaid, PlantUML, Graphviz/DOT, and D2 sources through your self-hosted
+Diagram as Code Gateway, then explicitly export deterministic SVGs.
 
-## Commands
+## Install
 
-- `Diagram: Open Preview` opens a live preview beside the editor.
-- `Diagram: Export SVG` writes the stable output path from `.diagramrc.yml`.
-- `Diagram: Set Gateway API Key` stores the key in VS Code SecretStorage.
+Install `Diagram as Code` from the Visual Studio Marketplace. A running Gateway
+is required; the extension does not install or start Docker.
 
-Preview waits for the configured debounce interval, cancels superseded requests, and reuses a matching render when exporting. Saving does not download or create an SVG; export remains an explicit command.
+## Connect to the Gateway
 
-When a supported diagram file is active, labeled `Preview` and `Export` buttons appear in the VS Code status bar. Icon buttons also appear in the diagram editor title, while an active preview has refresh and export buttons in its title bar. The same commands are available by right-clicking supported files in the editor or Explorer.
+Open a workspace containing `.diagramrc.yml`. For a local Windows server, use
+`http://localhost:9000`. Run `Diagram: Set Gateway API Key` once; the key is
+stored in VS Code SecretStorage.
+
+## Preview and export
+
+Open a `.mmd`, `.puml`, `.dot`, or `.d2` file and select Preview. Saving updates
+the live preview after the configured delay. Saving never writes an SVG. Select
+Export only when the canonical artifact should be updated.
+
+The `Preview` and `Export` actions are available in the status bar, editor title,
+editor context menu, and Explorer context menu. An active preview also provides
+Refresh and Export actions in its title bar.
 
 ## Project configuration
 
-Add `.diagramrc.yml` at the workspace root. See `product/.diagramrc.example.yml` in the repository. The API key can come from the configured environment variable or VS Code SecretStorage.
+Commit `.diagramrc.yml` with source and output directories. Never commit API keys.
+The key can come from the configured environment variable or VS Code SecretStorage.
+
+## Upgrade from the test VSIX
+
+Uninstall `diagram-as-code.diagram-as-code-vscode`, then install
+`phuongnam.diagram-as-code-vscode` from the Marketplace. Because VS Code
+SecretStorage is scoped to the extension ID, enter the Gateway API key again.
+
+## Data and privacy
+
+Diagram source is sent only to the Gateway URL configured by the workspace.
+The extension does not send source to the Visual Studio Marketplace or an
+analytics service.

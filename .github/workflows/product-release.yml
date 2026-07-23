@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   artifacts:
+    needs: gateway-image
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -32,11 +33,13 @@ jobs:
         run: >-
           gh release create "${GITHUB_REF_NAME}"
           product/release/${GITHUB_REF_NAME}/diagram-as-code-vscode-*.vsix
+          product/release/${GITHUB_REF_NAME}/diagram-as-code-server-*.zip
           product/release/${GITHUB_REF_NAME}/diagram-as-code-action-*.cjs
           product/release/${GITHUB_REF_NAME}/docker-compose.yml
           product/release/${GITHUB_REF_NAME}/diagram-as-code.env.example
           product/release/${GITHUB_REF_NAME}/diagramrc.example.yml
           product/release/${GITHUB_REF_NAME}/manifest.json
+          product/release/${GITHUB_REF_NAME}/RELEASE_NOTES.md
           product/release/${GITHUB_REF_NAME}/SHA256SUMS
           --notes-file product/release/${GITHUB_REF_NAME}/RELEASE_NOTES.md
           --title "${GITHUB_REF_NAME}"

@@ -1,6 +1,9 @@
 name: Diagram check
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -21,4 +24,4 @@ jobs:
           gateway-url: ${{ vars.DIAGRAM_GATEWAY_URL }}
           api-key: ${{ secrets.DIAGRAM_API_KEY }}
           config-path: .diagramrc.yml
-          changed-only: "false"
+          changed-only: ${{ github.event_name == 'pull_request' }}

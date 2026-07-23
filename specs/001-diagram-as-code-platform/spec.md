@@ -64,6 +64,23 @@ Là người vận hành, tôi muốn chạy dịch vụ render trong mạng ri�
 2. **Cho trước** API key thiếu hoặc sai, **Khi** client yêu cầu render, **Thì** truy cập bị từ chối.
 3. **Cho trước** dịch vụ vừa restart, **Khi** trạng thái sẵn sàng được khôi phục, **Thì** cả bốn loại sơ đồ tiếp tục render được.
 
+### Cách người dùng sử dụng hệ thống
+
+**Thiết lập lần đầu**:
+
+1. Người vận hành triển khai Gateway và các renderer, sau đó cấp API key cho nhóm sử dụng.
+2. Chủ dự án thêm file cấu hình để xác định Gateway, thư mục source và thư mục SVG output.
+3. Lập trình viên cài extension VS Code, mở dự án và lưu API key vào kho bí mật của editor.
+4. Chủ repository cấu hình GitHub Action và runner có thể truy cập Gateway.
+
+**Workflow hằng ngày**:
+
+1. Lập trình viên tạo hoặc sửa file `.mmd`, `.puml`, `.dot` hoặc `.d2` trong thư mục source.
+2. Người dùng bấm Preview; bản xem trước tự cập nhật khi source thay đổi nhưng chưa tạo SVG.
+3. Khi sơ đồ hoàn tất, người dùng bấm Export để cập nhật SVG tại đường dẫn output ổn định.
+4. Người dùng commit cả source và SVG, sau đó mở Pull Request.
+5. GitHub Action render lại source và so sánh với SVG đã commit. Pull Request chỉ đạt khi artifact không bị thiếu, cũ hoặc mồ côi.
+
 ### Các trường hợp biên
 
 - Source rỗng, quá lớn, sai cú pháp, sai phần mở rộng hoặc nằm ngoài thư mục cấu hình.
@@ -91,6 +108,8 @@ Là người vận hành, tôi muốn chạy dịch vụ render trong mạng ri�
 - **FR-013**: Kiểm tra repository PHẢI phát hiện artifact bị thiếu, đã cũ hoặc mồ côi; thay đổi cấu hình PHẢI kích hoạt kiểm tra toàn bộ.
 - **FR-014**: Kiểm tra repository PHẢI báo kết quả rõ ràng nhưng KHÔNG ĐƯỢC tự sửa file, commit hoặc đăng bình luận.
 - **FR-015**: Deployment mặc định chỉ PHẢI mở Gateway cho client; các renderer nội bộ không được expose trực tiếp.
+- **FR-016**: Hệ thống PHẢI cung cấp gói Windows cài đặt server có checksum, manifest khóa version, cài lại an toàn và rollback khi update thất bại.
+- **FR-017**: Extension PHẢI có thể phát hành bằng publisher `phuongnam` trên Visual Studio Marketplace.
 
 ### Ranh giới phạm vi
 
@@ -116,6 +135,8 @@ Là người vận hành, tôi muốn chạy dịch vụ render trong mạng ri�
 - **SC-004**: Export lặp lại source không đổi luôn tạo cùng đường dẫn và nội dung giống nhau từng byte.
 - **SC-005**: Bộ kiểm thử phát hiện 100% artifact bị thiếu, đã cũ, mồ côi, đổi tên hoặc sửa trực tiếp.
 - **SC-006**: Sau restart, dịch vụ sẵn sàng và render được cả bốn loại trong vòng 2 phút.
+- **SC-007**: Người dùng Windows có Docker Desktop có thể cài server từ ZIP, lấy Gateway URL và API key mà không phải tự viết file Compose.
+- **SC-008**: Artifact VSIX, Windows ZIP và Action bundle của cùng một release có version thống nhất và checksum kiểm chứng được.
 
 ## Giả định
 

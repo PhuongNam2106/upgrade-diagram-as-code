@@ -33,7 +33,8 @@ jobs:
         working-directory: product
       - name: Ensure the committed Action bundle is current
         run: git diff --exit-code -- product/github-action/dist/index.cjs
-      - run: npm --workspace=diagram-as-code-vscode run package
+      - name: Package Marketplace VSIX
+        run: npm --workspace=diagram-as-code-vscode run package
         working-directory: product
       - uses: actions/upload-artifact@v6
         with:
@@ -67,3 +68,30 @@ jobs:
         if: always()
         run: docker compose -p diagram-product-ci --env-file .env.example down --volumes --remove-orphans
         working-directory: product/deploy
+
+  windows-installer:
+    name: Windows installer
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: product
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: product/package-lock.json
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Install Pester
+        shell: powershell
+        run: Install-Module Pester -RequiredVersion 5.7.1 -Scope CurrentUser -Force -SkipPublisherCheck
+      - name: Test static installer contract
+        run: npm run test:installer-contract
+      - name: Test with Windows PowerShell 5.1
+        shell: powershell
+        run: Invoke-Pester .\windows-installer\test -CI -Output Detailed
+      - name: Test with PowerShell 7
+        shell: pwsh
+        run: Invoke-Pester .\windows-installer\test -CI -Output Detailed

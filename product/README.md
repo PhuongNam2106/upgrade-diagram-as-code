@@ -11,6 +11,22 @@ Lớp sản phẩm này bổ sung workflow hoàn chỉnh quanh fork Kroki mà kh
 
 Developer sửa file trong `docs/diagrams`, mở preview và dùng `Diagram: Export SVG` khi muốn cập nhật artifact. Họ commit cả source text và SVG. Pull request hiển thị text diff lẫn GitHub image diff; Action gọi cùng Gateway và fail nếu SVG cũ.
 
+## Cài đặt cho người dùng
+
+### VS Code extension
+
+Cài `phuongnam.diagram-as-code-vscode` từ **Visual Studio Marketplace**, sau đó cấu hình Gateway URL và chạy `Diagram: Set Gateway API Key` một lần. Extension cung cấp nút Preview và Export trên editor của các file sơ đồ được hỗ trợ.
+
+### Windows Server
+
+Máy Windows cần Docker Desktop đang chạy. Tải `diagram-as-code-server-0.2.0.zip` từ GitHub Release `product-v0.2.0`, giải nén rồi chạy:
+
+```powershell
+.\diagram-server.ps1 install
+```
+
+Installer kéo các image đã khóa version, chỉ mở Gateway tại `http://127.0.0.1:9000`, tự sinh API key và chờ dịch vụ sẵn sàng. Xem đầy đủ lệnh cài đặt, cập nhật và rollback trong [Windows Installer](windows-installer/README.md).
+
 ## Chạy local
 
 1. Làm theo [Environment Bootstrap](docs/environment-bootstrap.md).
