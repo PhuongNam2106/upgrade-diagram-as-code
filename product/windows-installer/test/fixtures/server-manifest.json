@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "productVersion": "0.2.0",
+  "composeProject": "diagram-as-code",
+  "gatewayUrl": "http://localhost:9000",
+  "readinessTimeoutSeconds": 120,
+  "images": {
+    "gateway": "ghcr.io/phuongnam2106/diagram-as-code-gateway:product-v0.2.0",
+    "kroki": "yuzutech/kroki:0.31.1",
+    "mermaid": "yuzutech/kroki-mermaid:0.31.1"
+  }
+}

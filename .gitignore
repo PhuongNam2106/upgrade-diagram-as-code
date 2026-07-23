@@ -9,6 +9,7 @@ target/
 /product/**/dist/
 /product/**/.vscode-test/
 /product/release/
+/product/testResults.xml
 /product/deploy/.env
 !/product/github-action/dist/
 !/product/github-action/dist/index.cjs

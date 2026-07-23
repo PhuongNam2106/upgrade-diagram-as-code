@@ -1,6 +1,6 @@
 {
   "name": "diagram-as-code-action",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "dist/index.cjs",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "@diagram-as-code/contracts": "0.1.0",
-    "@diagram-as-code/diagram-config": "0.1.0",
+    "@diagram-as-code/contracts": "0.2.0",
+    "@diagram-as-code/diagram-config": "0.2.0",
     "fast-glob": "^3.3.3",
     "minimatch": "^10.0.0"
   },

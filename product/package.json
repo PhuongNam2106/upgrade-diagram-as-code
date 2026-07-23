@@ -1,6 +1,6 @@
 {
   "name": "@diagram-as-code/product",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -14,12 +14,18 @@
     "test": "npm run test --workspaces --if-present",
     "pretypecheck": "npm --workspace=@diagram-as-code/contracts run build && npm --workspace=@diagram-as-code/diagram-config run build",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:installer-contract": "node ./scripts/test-windows-installer-contract.mjs",
+    "test:server-bundle": "node --test ./scripts/create-server-bundle.test.mjs",
+    "test:release-version": "node --test ./scripts/validate-release-versions.test.mjs",
+    "test:release-docs": "node --test ./scripts/docs-release-contract.test.mjs",
+    "test:release-tools": "npm run test:installer-contract && npm run test:server-bundle && npm run test:release-version && npm run test:release-docs",
     "smoke": "node scripts/smoke-test.mjs",
     "release:bundle": "node scripts/prepare-release.mjs",
-    "release:prepare": "npm audit && npm run typecheck && npm test && npm run build && npm --workspace=diagram-as-code-vscode run package && npm run release:bundle"
+    "release:prepare": "npm audit && npm run typecheck && npm test && npm run test:release-tools && npm run build && npm --workspace=diagram-as-code-vscode run package && npm run release:bundle"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "adm-zip": "^0.6.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
   },
