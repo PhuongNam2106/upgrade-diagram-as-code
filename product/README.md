@@ -19,7 +19,7 @@ Cài `phuongnam.diagram-as-code-vscode` từ **Visual Studio Marketplace**, sau 
 
 ### Windows Server
 
-Máy Windows cần Docker Desktop đang chạy. Tải `diagram-as-code-server-0.2.0.zip` từ GitHub Release `product-v0.2.0`, giải nén rồi chạy:
+Máy Windows cần Docker Desktop đang chạy. Tải `diagram-as-code-server-0.2.1.zip` từ GitHub Release `product-v0.2.1`, giải nén rồi chạy:
 
 ```powershell
 .\diagram-server.ps1 install

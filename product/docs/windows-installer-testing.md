@@ -3,7 +3,7 @@
 Thực hiện checklist này trên máy Windows có Docker Desktop trước khi phát hành.
 
 1. Xác nhận Docker Desktop đang chạy và port `9000` còn trống.
-2. Giải nén `diagram-as-code-server-0.2.0.zip` vào thư mục tạm.
+2. Giải nén `diagram-as-code-server-0.2.1.zip` vào thư mục tạm.
 3. Chạy `powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 install`.
 4. Chạy `status`; kết quả phải có `Running=True` và `Ready=True`.
 5. Lấy key bằng `show-key` và gọi render thật:

@@ -16,7 +16,7 @@ Khi Gateway nhận request:
 
 API key giúp ngăn một chương trình không được phép gọi Gateway liên tục, gửi source ngoài ý muốn hoặc tiêu tốn tài nguyên render. Key này chỉ bảo vệ Gateway, không liên quan đến tài khoản GitHub hoặc Visual Studio Marketplace.
 
-Gateway của phiên bản `0.2.0` dự kiến chỉ lắng nghe tại `127.0.0.1`, nhưng vẫn nên giữ API key để tăng mức bảo vệ và duy trì hành vi thống nhất giữa VS Code extension và GitHub Action.
+Gateway từ phiên bản `0.2.0` chỉ lắng nghe tại `127.0.0.1`, nhưng vẫn nên giữ API key để tăng mức bảo vệ và duy trì hành vi thống nhất giữa VS Code extension và GitHub Action.
 
 Installer sẽ tự sinh key. Người dùng chỉ cần nhập key một lần vào:
 
@@ -79,7 +79,7 @@ Khi chạy lại `install` hoặc `update`, installer giữ nguyên key hiện t
 
 ## Lệnh install sẽ làm gì?
 
-> Phần này mô tả thiết kế dự kiến của Windows installer trong phiên bản `0.2.0`. Bản `0.1.0` hiện vẫn cài server bằng Docker Compose thủ công.
+> Phần này mô tả Windows installer từ phiên bản `0.2.1`. Bản `0.1.0` cài server bằng Docker Compose thủ công; không nên dùng installer `0.2.0` trên Windows PowerShell 5.1.
 
 Người dùng chạy lệnh sau trên máy Windows dùng chung cho VS Code và self-hosted runner:
 
@@ -124,7 +124,7 @@ Chạy lại `install` phải an toàn: installer tái sử dụng cấu hình v
 
 ## File cài đặt server có tự dùng Docker Desktop để kéo image và chạy service không?
 
-Có. Gói `diagram-as-code-server-0.2.0.zip` là một bộ điều khiển cài đặt nhỏ, không chứa sẵn toàn bộ Gateway và Kroki. Khi người dùng chạy:
+Có. Gói `diagram-as-code-server-0.2.1.zip` là một bộ điều khiển cài đặt nhỏ, không chứa sẵn toàn bộ Gateway và Kroki. Khi người dùng chạy:
 
 ```powershell
 .\diagram-server.ps1 install

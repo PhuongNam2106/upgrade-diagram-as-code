@@ -260,11 +260,40 @@ function Invoke-DiagramDocker {
 
     Push-Location $WorkingDirectory
     try {
-        $output = & docker @Arguments 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            throw "Docker command failed: $($output -join [Environment]::NewLine)"
+        $previousErrorActionPreference = $ErrorActionPreference
+        $nativePreference = Get-Variable `
+            -Name PSNativeCommandUseErrorActionPreference `
+            -ErrorAction SilentlyContinue
+        $previousNativePreference = if ($null -ne $nativePreference) {
+            $nativePreference.Value
         }
-        return $output
+        else {
+            $null
+        }
+        $output = @()
+        $exitCode = -1
+        try {
+            $ErrorActionPreference = "Continue"
+            if ($null -ne $nativePreference) {
+                Set-Variable -Name PSNativeCommandUseErrorActionPreference -Value $false
+            }
+            $output = @(& docker @Arguments 2>&1)
+            $exitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+            if ($null -ne $nativePreference) {
+                Set-Variable `
+                    -Name PSNativeCommandUseErrorActionPreference `
+                    -Value $previousNativePreference
+            }
+        }
+
+        $outputText = @($output | ForEach-Object { $_.ToString() })
+        if ($exitCode -ne 0) {
+            throw "Docker command failed: $($outputText -join [Environment]::NewLine)"
+        }
+        return $outputText
     }
     finally {
         Pop-Location

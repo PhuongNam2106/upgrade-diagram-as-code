@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Align the extension package with the `0.2.1` product patch release.
+- Keep the Marketplace identity and extension behavior unchanged.
+- Use the Windows Server `0.2.1` package when running the local Gateway.
+
 ## 0.2.0
 
 - Publish as `phuongnam.diagram-as-code-vscode` on the Visual Studio Marketplace.
