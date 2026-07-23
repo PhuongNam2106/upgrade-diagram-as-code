@@ -12,6 +12,54 @@ on:
       - ".github/workflows/product-ci.yml"
 
 jobs:
+  changes:
+    name: Detect affected product areas
+    runs-on: ubuntu-24.04
+    outputs:
+      compose: ${{ steps.filter.outputs.compose }}
+      windows: ${{ steps.filter.outputs.windows }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Classify changed files
+        id: filter
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            BASE_SHA="$(git rev-list --max-parents=0 "$HEAD_SHA")"
+          fi
+
+          compose=false
+          windows=false
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files.txt"
+
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/product-ci.yml)
+                compose=true
+                windows=true
+                ;;
+              product/deploy/*|product/gateway/*|product/packages/contracts/*|product/scripts/smoke-test.mjs|product/scripts/determinism-test.mjs|product/package.json|product/package-lock.json|product/tsconfig.base.json)
+                compose=true
+                ;;
+            esac
+
+            case "$file" in
+              .github/workflows/product-ci.yml|product/windows-installer/*|product/scripts/create-server-bundle.mjs|product/scripts/create-server-bundle.test.mjs|product/scripts/test-windows-installer-contract.mjs|product/package.json|product/package-lock.json)
+                windows=true
+                ;;
+            esac
+          done < "$RUNNER_TEMP/changed-files.txt"
+
+          echo "compose=$compose" >> "$GITHUB_OUTPUT"
+          echo "windows=$windows" >> "$GITHUB_OUTPUT"
+          echo "Compose tests required: $compose"
+          echo "Windows installer tests required: $windows"
+
   quality:
     runs-on: ubuntu-24.04
     steps:
@@ -42,6 +90,8 @@ jobs:
           path: product/vscode-extension/dist/*.vsix
 
   compose:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -71,6 +121,8 @@ jobs:
 
   windows-installer:
     name: Windows installer
+    needs: changes
+    if: needs.changes.outputs.windows == 'true'
     runs-on: windows-latest
     defaults:
       run:

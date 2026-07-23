@@ -4,11 +4,21 @@ on:
   push:
     paths-ignore:
       - 'docs/**'
+      - 'product/**'
+      - '.diagramrc.yml'
+      - '.github/workflows/product-ci.yml'
+      - '.github/workflows/product-release.yml'
+      - '.github/workflows/diagram-check.yml'
     branches:
       - main
   pull_request:
     paths-ignore:
       - 'docs/**'
+      - 'product/**'
+      - '.diagramrc.yml'
+      - '.github/workflows/product-ci.yml'
+      - '.github/workflows/product-release.yml'
+      - '.github/workflows/diagram-check.yml'
     branches:
       - '*'
   workflow_call:
