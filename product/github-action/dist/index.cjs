@@ -46875,6 +46875,7 @@ var import_node_path2 = __toESM(require("node:path"), 1);
 
 // ../packages/contracts/dist/index.js
 var import_node_path = require("node:path");
+var DEFAULT_RENDER_FORMAT = "svg";
 var EXTENSION_TO_TYPE = {
   ".mmd": "mermaid",
   ".puml": "plantuml",
@@ -46883,6 +46884,12 @@ var EXTENSION_TO_TYPE = {
 };
 function detectDiagramType(filePath) {
   return EXTENSION_TO_TYPE[(0, import_node_path.extname)(filePath).toLowerCase()];
+}
+function createRenderRequest(filePath, source) {
+  const type = detectDiagramType(filePath);
+  if (!type)
+    throw new Error(`Unsupported diagram source: ${filePath}`);
+  return { type, format: DEFAULT_RENDER_FORMAT, source };
 }
 
 // ../node_modules/balanced-match/dist/esm/index.js
@@ -48741,23 +48748,7 @@ function buildVerificationPlan(changes, allSources, config2, forceAll) {
   return [...items.values()].sort((a, b) => a.sourcePath.localeCompare(b.sourcePath));
 }
 function deterministicRequest(sourcePath, source) {
-  const type = detectDiagramType(sourcePath);
-  if (!type) throw new Error(`Unsupported diagram source: ${sourcePath}`);
-  if (type === "mermaid") {
-    return {
-      type,
-      format: "svg",
-      source,
-      options: {
-        "deterministic-ids": true,
-        "deterministic-id-seed": normalize(sourcePath)
-      }
-    };
-  }
-  if (type === "plantuml") {
-    return { type, format: "svg", source, options: { "no-metadata": true } };
-  }
-  return { type, format: "svg", source };
+  return createRenderRequest(sourcePath, source);
 }
 function parseNameStatus(output) {
   const changes = [];

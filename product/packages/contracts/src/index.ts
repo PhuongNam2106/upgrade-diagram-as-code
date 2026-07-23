@@ -44,6 +44,12 @@ export function detectDiagramType(filePath: string): DiagramType | undefined {
   return EXTENSION_TO_TYPE[extname(filePath).toLowerCase()];
 }
 
+export function createRenderRequest(filePath: string, source: string): RenderRequest {
+  const type = detectDiagramType(filePath);
+  if (!type) throw new Error(`Unsupported diagram source: ${filePath}`);
+  return { type, format: DEFAULT_RENDER_FORMAT, source };
+}
+
 export function isDiagramType(value: unknown): value is DiagramType {
   return typeof value === "string" && DIAGRAM_TYPES.includes(value as DiagramType);
 }

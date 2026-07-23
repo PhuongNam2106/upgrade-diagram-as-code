@@ -63,17 +63,15 @@ test("verifies the source when a generated SVG is changed directly", () => {
   );
 });
 
-test("applies stable renderer options by diagram type", () => {
+test("uses the same canonical render requests as VS Code export", () => {
   assert.deepEqual(deterministicRequest("docs/diagrams/a.mmd", "flowchart LR\nA-->B"), {
     type: "mermaid",
     format: "svg",
     source: "flowchart LR\nA-->B",
-    options: { "deterministic-ids": true, "deterministic-id-seed": "docs/diagrams/a.mmd" },
   });
   assert.deepEqual(deterministicRequest("docs/diagrams/a.puml", "@startuml\n@enduml"), {
     type: "plantuml",
     format: "svg",
     source: "@startuml\n@enduml",
-    options: { "no-metadata": true },
   });
 });

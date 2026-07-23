@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { detectDiagramType, type RenderRequest } from "@diagram-as-code/contracts";
+import { createRenderRequest, detectDiagramType } from "@diagram-as-code/contracts";
 import { parseDiagramConfig, type DiagramConfig } from "@diagram-as-code/diagram-config";
 import * as vscode from "vscode";
 
@@ -131,7 +131,7 @@ class DiagramController implements vscode.Disposable {
       throw new Error("No Gateway API key found. Run Diagram: Set Gateway API Key.");
     }
 
-    const request: RenderRequest = { type, format: "svg", source: document.getText() };
+    const request = createRenderRequest(document.uri.fsPath, document.getText());
     const resource = document.uri.toString();
     const fingerprint = `${project.config.server.url}\0${project.apiKey ?? ""}`;
     let entry = this.coordinators.get(resource);
