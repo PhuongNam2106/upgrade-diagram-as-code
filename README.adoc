@@ -1,193 +1,310 @@
-:uri-kroki: https://kroki.io/
-:uri-kroki-docs: https://docs.kroki.io/
-:uri-maven: https://maven.apache.org/
+# Hướng dẫn cài đặt và sử dụng Diagram as Code trên Windows
 
-++++
-<a href="https://kroki.io/">
-<picture>
-  <source media="(prefers-color-scheme: dark)" width="200" srcset="https://kroki.io/assets/logo-white.svg">
-  <source media="(prefers-color-scheme: light)" width="200" srcset="https://kroki.io/assets/logo.svg">
-  <img alt="Kroki logo" width="200" src="https://kroki.io/assets/logo.svg">
-</picture>
-</a>
-++++
----
+Tài liệu này dành cho người mới, không cần biết Docker, API hay lập trình. Hãy làm
+lần lượt từng bước. Sau khi hoàn thành, bạn có thể viết một sơ đồ bằng văn bản,
+xem trước trong VS Code và xuất thành ảnh SVG.
 
-ifdef::env-github[]
-image:https://github.com/yuzutech/kroki/workflows/CI/badge.svg?branch=master[GitHub Actions build status, link=https://github.com/yuzutech/kroki/actions]
-image:https://img.shields.io/badge/zulip-join_chat-brightgreen.svg[Zulip chat, link=https://kroki.zulipchat.com/]
-endif::[]
+## 1. Hệ thống này làm gì?
 
-{uri-kroki}[Kroki] provides a unified API with support for BlockDiag (BlockDiag, SeqDiag, ActDiag, NwDiag, PacketDiag, RackDiag), BPMN, Bytefield, C4 (with PlantUML), D2, DBML, Diagrams.net (experimental), Ditaa, Erd, Excalidraw, GoAT, GraphViz, Mermaid, Nomnoml, Pikchr, PlantUML, SvgBob, Symbolator, UMLet, Vega, Vega-Lite, WaveDrom and WireViz... and more to come!
+Bạn viết nội dung sơ đồ trong một file văn bản, ví dụ `hello.mmd`. Diagram as Code
+gửi nội dung đó đến server đang chạy trên máy của bạn và hiển thị sơ đồ trong VS
+Code.
 
-== Quickstart
+Hệ thống gồm hai phần:
 
-This section offers a basic tutorial for evaluating Kroki.
-More comprehensive installation instructions are in the {uri-kroki-docs}[Kroki documentation].
+- **Diagram as Code Server:** chuyển văn bản thành hình ảnh. Server chạy trong
+  Docker Desktop trên chính máy Windows của bạn.
+- **VS Code extension:** cung cấp nút Preview để xem trước và Export để lưu ảnh.
 
-== Usage
+Docker Desktop phải đang chạy khi bạn Preview hoặc Export sơ đồ.
 
-Kroki uses a simple algorithm (deflate + base64) to encode your diagram in the URL:
+## 2. Cần chuẩn bị gì?
 
-`GET /plantuml/svg/SyfFKj2rKt3CoKnELR1Io4ZDoSa70000`
+Máy tính cần có:
 
-You can also call Kroki with `POST`:
+- Windows 10 hoặc Windows 11.
+- Kết nối Internet trong lần cài đặt đầu tiên.
+- [Visual Studio Code](https://code.visualstudio.com/download).
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+- Hai file tải từ
+  [GitHub Release product-v0.3.0](https://github.com/PhuongNam2106/upgrade-diagram-as-code/releases/tag/product-v0.3.0):
+  - `diagram-as-code-server-0.3.0.zip`
+  - `diagram-as-code-vscode-0.3.0.vsix`
 
- POST /
+File ZIP là server. File VSIX là extension của VS Code.
 
-[source,json]
-----
-{
-  "diagram_source": "Bob -> Alice : hello",
-  "diagram_type": "plantuml",
-  "output_format": "svg"
-}
-----
+## 3. Cài Docker Desktop
 
-In this case, you don't need to encode your diagram.
+1. Cài Docker Desktop như một ứng dụng Windows bình thường.
+2. Nếu Docker yêu cầu cài WSL 2 hoặc khởi động lại máy, hãy làm theo thông báo.
+3. Mở Docker Desktop.
+4. Chờ đến khi Docker báo engine đã sẵn sàng. Không đóng Docker Desktop trong lúc
+   sử dụng Diagram as Code.
 
-It's also possible to send your diagram as plain text using the `Content-Type` header.
-The output format will be specified using the `Accept` header and the diagram source will be sent as the request body:
+Bạn không cần tự tạo container hay gõ lệnh Docker. Bộ cài server sẽ làm việc đó.
 
- POST /plantuml
+## 4. Cài Diagram as Code Server
 
-[source]
-----
-Accept: image/svg+xml
-Content-Type: text/plain
+### Bước 4.1: Giải nén
 
-Bob -> Alice : hello
-----
+1. Bấm chuột phải vào `diagram-as-code-server-0.3.0.zip`.
+2. Chọn **Extract All...** hoặc **Giải nén tất cả**.
+3. Mở thư mục vừa giải nén, sau đó mở thư mục `server`.
 
-You can also define the output format in the URL if you don't want to add an `Accept` header:
+Không chạy bộ cài trực tiếp bên trong file ZIP.
 
- POST /plantuml/svg
+### Bước 4.2: Mở PowerShell đúng thư mục
 
-[source]
-----
-Content-Type: text/plain
+1. Trong cửa sổ thư mục `server`, bấm vào thanh địa chỉ ở phía trên.
+2. Gõ `powershell` và nhấn Enter.
+3. Một cửa sổ PowerShell sẽ mở tại đúng thư mục đó.
 
-Bob -> Alice : hello
-----
+### Bước 4.3: Cài server
 
-The same concept applies when sending the diagram as JSON:
+Dán lệnh sau vào PowerShell và nhấn Enter:
 
- POST /plantuml/svg
-[source,json]
-----
-{
-  "diagram_source": "Bob -> Alice : hello"
-}
-----
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 install
+```
 
-== Project layout
+Lần đầu có thể mất vài phút vì Docker cần tải các image. Cài đặt thành công khi
+màn hình hiển thị:
 
-Kroki has a modular architecture:
+```text
+Gateway URL: http://localhost:9000
+API key: ...
+Status: Ready
+```
 
-server::
-A Java web server (powered by _Vert.x_) that acts as a gateway.
-Kroki server is built using {uri-maven}[Maven].
+Hãy giữ kín API key. Đây là mật khẩu để extension được phép gọi server. Không gửi
+key lên GitHub và không đặt key trong tài liệu của dự án.
 
-umlet::
-A tiny Java API on top of _UMlet_ (mini) to generate diagrams.
+### Bước 4.4: Kiểm tra server
 
-nomnoml::
-A Node.js CLI on top of the _Nomnoml_ diagram library.
+Chạy:
 
-vega::
-A Node.js CLI on top of the _vega_ diagram library. Also supports Vega-Lite concise grammar.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 status
+```
 
-mermaid::
-A companion web server written in JavaScript (powered by _micro_) that provides _Mermaid_ diagram library.
+Nếu thấy `Status: Ready`, server đã sẵn sàng.
 
-bpmn::
-A companion web server written in JavaScript (powered by _micro_) that provides _bpmn-js_ diagram library.
+Nếu quên API key, mở PowerShell trong thư mục `server` và chạy:
 
-bytefield::
-A Node.js CLI on top of the _bytefield-svg_ diagram library.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 show-key
+```
 
-wavedrom::
-A Node.js CLI on top of the _wavedrom_ diagram library.
+### Bước 4.5: Thử nhanh bằng Playground
 
-excalidraw::
-A companion web server written in JavaScript (powered by _micro_) that provides _Excalidraw_.
+Mở trình duyệt và truy cập:
 
-diagrams.net::
-A companion web server written in JavaScript (powered by _micro_) that provides _diagrams.net_.
+```text
+http://localhost:9000/playground
+```
 
-== Build
+Dán API key vào ô **API key**, bấm **Save**, chọn loại sơ đồ rồi bấm **Render**.
+Playground dùng cùng server với extension, nên nếu Playground render được thì server
+đang hoạt động đúng.
 
-Install `task` command-line: https://taskfile.dev/installation/
+## 5. Cài extension vào VS Code
 
-=== Gateway Server
+1. Mở VS Code.
+2. Bấm biểu tượng **Extensions** ở thanh bên trái.
+3. Bấm nút ba chấm `...` ở góc trên của khung Extensions.
+4. Chọn **Install from VSIX...**.
+5. Chọn file `diagram-as-code-vscode-0.3.0.vsix` đã tải.
+6. Nếu VS Code hiện nút **Reload** hoặc yêu cầu khởi động lại, hãy bấm nút đó.
 
-The first step is to build the project using Maven:
+## 6. Tạo dự án sơ đồ đầu tiên
 
- $ task mavenBuild
+### Bước 6.1: Mở một thư mục làm việc
 
-=== Docker Images
+1. Tạo thư mục, ví dụ `D:\My-Diagrams`.
+2. Trong VS Code, chọn **File > Open Folder...**.
+3. Chọn thư mục `D:\My-Diagrams`.
+4. Nếu VS Code hỏi có tin tưởng thư mục hay không, chọn tin tưởng nếu đây là thư
+   mục do chính bạn tạo.
 
-To build all the Docker images, use the following command:
+### Bước 6.2: Tạo file cấu hình
 
- $ sudo task dockerBuildImages
+Trong khung Explorer của VS Code, tạo file tên chính xác là `.diagramrc.yml` tại
+thư mục gốc `My-Diagrams`. Dán nội dung sau vào file:
 
-NOTE: `sudo` might not be needed depending on your distribution and `docker` configuration.
+```yaml
+version: 1
+server:
+  url: http://localhost:9000
+  apiKeyEnv: DIAGRAM_API_KEY
+sources:
+  directory: docs/diagrams
+  include:
+    - "**/*.mmd"
+    - "**/*.puml"
+    - "**/*.dot"
+    - "**/*.d2"
+output:
+  directory: docs/generated
+  format: svg
+preview:
+  debounceMs: 600
+render:
+  onSave: changed
+  exportOnSave: false
+```
 
-== Run
+File này cho extension biết server ở đâu, file sơ đồ nằm ở đâu và ảnh sẽ được
+lưu ở đâu. File này không chứa API key nên có thể đưa lên Git.
 
-Once the Docker images are built, you can run Kroki using `docker`:
+### Bước 6.3: Tạo file sơ đồ Mermaid
 
- $ docker run -d -p 8000:8000 yuzutech/kroki
+1. Tạo thư mục `docs`.
+2. Trong `docs`, tạo thư mục `diagrams`.
+3. Trong `docs/diagrams`, tạo file `hello.mmd`.
+4. Dán nội dung sau và nhấn `Ctrl + S`:
 
-=== Companion Containers
+```mermaid
+flowchart LR
+    A[Bắt đầu] --> B[Thực hiện công việc]
+    B --> C[Hoàn tất]
+```
 
-If you want to use one of the following diagram libraries then you will also need to start the corresponding companion container:
+Cấu trúc thư mục lúc này sẽ như sau:
 
-yuzutech/kroki-mermaid::
-Mermaid
+```text
+My-Diagrams/
+|-- .diagramrc.yml
+`-- docs/
+    `-- diagrams/
+        `-- hello.mmd
+```
 
-yuzutech/kroki-bpmn::
-BPMN
+## 7. Kết nối extension với server
 
-yuzutech/kroki-excalidraw::
-Excalidraw
+1. Đảm bảo Docker Desktop đang chạy và server có trạng thái `Ready`.
+2. Mở file `hello.mmd` trong VS Code.
+3. Nhấn `Ctrl + Shift + P` để mở Command Palette.
+4. Gõ và chọn `Diagram: Set Gateway API Key`.
+5. Dán API key mà server đã tạo, sau đó nhấn Enter.
 
-yuzutech/kroki-diagramsnet (experimental)::
-diagrams.net
+API key được lưu trong kho bảo mật SecretStorage của VS Code. Bạn không cần nhập
+key vào `.diagramrc.yml` hoặc file `.env` của dự án.
 
-You can use `docker-compose` to run multiple containers:
+## 8. Xem trước và xuất ảnh
 
-.docker-compose.yml
-[source,yml]
-----
-services:
-  core:
-    image: yuzutech/kroki
-    environment:
-      - KROKI_MERMAID_HOST=mermaid
-      - KROKI_BPMN_HOST=bpmn
-      - KROKI_EXCALIDRAW_HOST=excalidraw
-      # experimental!
-      - KROKI_DIAGRAMSNET_HOST=diagramsnet
-    ports:
-      - "8000:8000"
-  mermaid:
-    image: yuzutech/kroki-mermaid
-    expose:
-      - "8002"
-  bpmn:
-    image: yuzutech/kroki-bpmn
-    expose:
-      - "8003"
-  excalidraw:
-    image: yuzutech/kroki-excalidraw
-    expose:
-      - "8004"
-  # experimental!
-  diagramsnet:
-    image: yuzutech/kroki-diagramsnet
-    expose:
-      - "8005"
-----
+### Xem trước
 
- $ docker-compose up -d
+Khi đang mở `hello.mmd`, bấm nút **Preview** trên thanh trạng thái hoặc ở góc trên
+của trình soạn thảo. Bạn cũng có thể nhấn `Ctrl + Shift + P` và chọn
+`Diagram: Open Preview`.
+
+Sơ đồ sẽ mở ở một khung bên cạnh. Khi bạn sửa nội dung và nhấn `Ctrl + S`, bản xem
+trước sẽ được cập nhật. Việc Save chỉ cập nhật Preview, không tự tải nhiều file
+ảnh về máy.
+
+### Xuất ảnh SVG
+
+Chỉ bấm **Export** khi bạn thực sự muốn lưu ảnh. Bạn cũng có thể chạy
+`Diagram: Export SVG` từ Command Palette.
+
+Với ví dụ trên, ảnh được lưu tại:
+
+```text
+docs/generated/hello.svg
+```
+
+Nếu Export lại cùng một sơ đồ, file SVG cũ được cập nhật thay vì tạo thêm nhiều
+bản sao.
+
+## 9. Cách sử dụng hằng ngày
+
+Mỗi lần muốn làm việc với sơ đồ:
+
+1. Mở Docker Desktop và chờ Docker sẵn sàng.
+2. Mở thư mục dự án trong VS Code.
+3. Mở file `.mmd`, `.puml`, `.dot` hoặc `.d2`.
+4. Bấm Preview để xem sơ đồ.
+5. Sửa nội dung và nhấn `Ctrl + S` để cập nhật bản xem trước.
+6. Bấm Export khi muốn cập nhật file SVG chính thức.
+
+Không cần chạy lại lệnh `install` mỗi ngày. Nếu server dừng, có thể khởi động lại
+bằng lệnh `restart` ở phần dưới.
+
+## 10. Xử lý lỗi thường gặp
+
+### Lỗi `A valid bearer API key is required`
+
+Extension chưa có key hoặc key không đúng.
+
+1. Chạy `show-key` trong thư mục server.
+2. Trong VS Code, chạy `Diagram: Set Gateway API Key`.
+3. Dán lại key mới nhất.
+
+### Lỗi không đọc được `.diagramrc.yml`
+
+Kiểm tra:
+
+- Bạn đã mở cả thư mục dự án bằng **File > Open Folder...**, không chỉ mở riêng
+  file `hello.mmd`.
+- `.diagramrc.yml` nằm ngay tại thư mục gốc.
+- Tên file không bị thành `.diagramrc.yml.txt`.
+
+### Preview không hiện ảnh
+
+1. Kiểm tra Docker Desktop đang chạy.
+2. Chạy lệnh `status` của server.
+3. Kiểm tra nội dung file sơ đồ có đúng cú pháp hay không.
+4. Bấm **Refresh Preview** hoặc đóng Preview và mở lại.
+
+### Docker báo chưa sẵn sàng
+
+Mở Docker Desktop, đợi đến khi engine sẵn sàng, sau đó chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 restart
+```
+
+### Cần xem log để tìm lỗi
+
+Trong thư mục `server`, chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 logs -Tail 200
+```
+
+### Cổng `9000` đang được sử dụng
+
+Một ứng dụng khác hoặc bản Diagram as Code cũ có thể đang dùng cổng này. Hãy đóng
+bản server cũ, sau đó chạy lại `install`. Nếu không biết ứng dụng nào đang dùng
+cổng, hãy gửi nội dung lỗi cho người hỗ trợ kỹ thuật.
+
+## 11. Khởi động lại hoặc gỡ cài đặt server
+
+Mở PowerShell trong thư mục `server`.
+
+Khởi động lại:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 restart
+```
+
+Gỡ các container nhưng giữ cấu hình và API key:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 uninstall
+```
+
+Gỡ hoàn toàn cả cấu hình và API key:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 uninstall -Purge
+```
+
+Chỉ dùng `-Purge` khi bạn chắc chắn không cần API key và cấu hình cũ.
+
+## 12. Ghi nhớ ba điều
+
+1. Docker Desktop phải đang chạy để Preview và Export.
+2. Không chia sẻ hoặc commit API key lên Git.
+3. Save cập nhật bản xem trước; Export mới ghi file SVG vào thư mục
+   `docs/generated`.

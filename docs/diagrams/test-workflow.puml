@@ -3,7 +3,7 @@ title Diagram as Code - Luồng Preview và Export
 
 autonumber
 
-actor "Nguyễn Nam" as User
+actor "Nguyễn Nam change" as User
 participant "VS Code Extension" as Extension
 participant "Gateway" as Gateway
 participant "Kroki / PlantUML" as Renderer
