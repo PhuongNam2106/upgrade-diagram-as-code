@@ -158,11 +158,27 @@ Describe "Assert-DiagramDockerReady" {
 
 Describe "Invoke-DiagramDocker" {
     It "runs Docker from the requested working directory" {
-        $output = Invoke-DiagramDocker `
-            -Arguments @("version", "--format", "{{.Client.Version}}") `
-            -WorkingDirectory $TestDrive
+        $fakeBin = Join-Path $TestDrive "working-directory-docker-bin"
+        New-Item -ItemType Directory -Path $fakeBin | Out-Null
+        @"
+@echo off
+cd
+exit /b 0
+"@ | Set-Content -LiteralPath (Join-Path $fakeBin "docker.cmd") -Encoding Ascii
 
-        [string]::Join("", $output) | Should -Match "^\d+\.\d+\.\d+"
+        $previousPath = $env:PATH
+        try {
+            $env:PATH = "$fakeBin;$previousPath"
+            $output = Invoke-DiagramDocker `
+                -Arguments @("version") `
+                -WorkingDirectory $TestDrive
+
+            [IO.Path]::GetFullPath([string]::Join("", $output)) |
+                Should -Be ([IO.Path]::GetFullPath($TestDrive))
+        }
+        finally {
+            $env:PATH = $previousPath
+        }
     }
 
     It "does not treat successful stderr progress as a Docker failure" {
