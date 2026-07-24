@@ -2,7 +2,7 @@
   "name": "diagram-as-code-vscode",
   "displayName": "Diagram as Code",
   "description": "Live Kroki previews and deterministic SVG export for diagram source files.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "publisher": "phuongnam",
   "icon": "resources/icon.png",
@@ -52,8 +52,8 @@
     "package": "npm run build && npm run package:check"
   },
   "dependencies": {
-    "@diagram-as-code/contracts": "0.2.1",
-    "@diagram-as-code/diagram-config": "0.2.1"
+    "@diagram-as-code/contracts": "0.3.0",
+    "@diagram-as-code/diagram-config": "0.3.0"
   },
   "devDependencies": {
     "@types/vscode": "^1.100.0",

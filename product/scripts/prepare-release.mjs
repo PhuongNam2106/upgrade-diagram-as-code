@@ -40,6 +40,7 @@ const packagePaths = [
   "gateway/package.json",
   "vscode-extension/package.json",
   "github-action/package.json",
+  "playground/package.json",
 ];
 const packages = await Promise.all(packagePaths.map(readJson));
 const version = validateReleaseVersions(packages);

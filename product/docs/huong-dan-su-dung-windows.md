@@ -27,9 +27,9 @@ Máy tính cần có:
 - [Visual Studio Code](https://code.visualstudio.com/download).
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 - Hai file tải từ
-  [GitHub Release product-v0.2.1](https://github.com/PhuongNam2106/upgrade-diagram-as-code/releases/tag/product-v0.2.1):
-  - `diagram-as-code-server-0.2.1.zip`
-  - `diagram-as-code-vscode-0.2.1.vsix`
+  [GitHub Release product-v0.3.0](https://github.com/PhuongNam2106/upgrade-diagram-as-code/releases/tag/product-v0.3.0):
+  - `diagram-as-code-server-0.3.0.zip`
+  - `diagram-as-code-vscode-0.3.0.vsix`
 
 File ZIP là server. File VSIX là extension của VS Code.
 
@@ -47,7 +47,7 @@ Bạn không cần tự tạo container hay gõ lệnh Docker. Bộ cài server 
 
 ### Bước 4.1: Giải nén
 
-1. Bấm chuột phải vào `diagram-as-code-server-0.2.1.zip`.
+1. Bấm chuột phải vào `diagram-as-code-server-0.3.0.zip`.
 2. Chọn **Extract All...** hoặc **Giải nén tất cả**.
 3. Mở thư mục vừa giải nén, sau đó mở thư mục `server`.
 
@@ -95,13 +95,25 @@ Nếu quên API key, mở PowerShell trong thư mục `server` và chạy:
 powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 show-key
 ```
 
+### Bước 4.5: Thử nhanh bằng Playground
+
+Mở trình duyệt và truy cập:
+
+```text
+http://localhost:9000/playground
+```
+
+Dán API key vào ô **API key**, bấm **Save**, chọn loại sơ đồ rồi bấm **Render**.
+Playground dùng cùng server với extension, nên nếu Playground render được thì server
+đang hoạt động đúng.
+
 ## 5. Cài extension vào VS Code
 
 1. Mở VS Code.
 2. Bấm biểu tượng **Extensions** ở thanh bên trái.
 3. Bấm nút ba chấm `...` ở góc trên của khung Extensions.
 4. Chọn **Install from VSIX...**.
-5. Chọn file `diagram-as-code-vscode-0.2.1.vsix` đã tải.
+5. Chọn file `diagram-as-code-vscode-0.3.0.vsix` đã tải.
 6. Nếu VS Code hiện nút **Reload** hoặc yêu cầu khởi động lại, hãy bấm nút đó.
 
 ## 6. Tạo dự án sơ đồ đầu tiên

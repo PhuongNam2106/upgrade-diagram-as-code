@@ -1,4 +1,8 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { existsSync } from "node:fs";
+import { readFile, stat } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { DIAGRAM_TYPES, type RenderRequest } from "@diagram-as-code/contracts";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
@@ -19,6 +23,26 @@ const renderRequestSchema = z.object({
 interface CreateGatewayOptions {
   config: GatewayConfig;
   renderer: RendererClient;
+  playgroundDirectory?: string | false;
+}
+
+const MIME_TYPES: Record<string, string> = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+};
+
+function defaultPlaygroundDirectory(): string | undefined {
+  if (process.env.DIAGRAM_PLAYGROUND_DIR) return process.env.DIAGRAM_PLAYGROUND_DIR;
+  const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(process.cwd(), "playground/dist"),
+    path.resolve(process.cwd(), "../playground/dist"),
+    path.resolve(moduleDirectory, "../../playground/dist"),
+  ];
+  return candidates.find((candidate) => existsSync(path.join(candidate, "index.html")));
 }
 
 function keyMatches(candidate: string, expected: string): boolean {
@@ -42,13 +66,17 @@ function errorBody(
   };
 }
 
-export function createGateway({ config, renderer }: CreateGatewayOptions) {
+export function createGateway(options: CreateGatewayOptions) {
+  const { config, renderer } = options;
   const app = Fastify({
     logger: false,
     bodyLimit: config.maxSourceBytes + 65_536,
     requestIdHeader: "x-request-id",
   });
   const renderService = new RenderService(renderer, config.cacheMaxEntries);
+  const playgroundDirectory = options.playgroundDirectory === false
+    ? undefined
+    : options.playgroundDirectory ?? defaultPlaygroundDirectory();
 
   app.addHook("onRequest", async (request, reply) => {
     void reply.header("X-Request-Id", request.id);
@@ -111,6 +139,48 @@ export function createGateway({ config, renderer }: CreateGatewayOptions) {
     return reply.code(ready ? 200 : 503).send({ status: ready ? "ready" : "not_ready" });
   });
   app.get("/v1/capabilities", async () => ({ types: [...DIAGRAM_TYPES], formats: ["svg"] }));
+
+  async function servePlayground(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    if (!playgroundDirectory) {
+      await reply.code(404).send(errorBody(request, "PLAYGROUND_NOT_FOUND", "The playground build is not available"));
+      return;
+    }
+
+    const wildcard = (request.params as Record<string, string | undefined>)["*"] ?? "";
+    let requestedPath: string;
+    try {
+      requestedPath = decodeURIComponent(wildcard) || "index.html";
+    } catch {
+      await reply.code(404).send();
+      return;
+    }
+
+    const root = path.resolve(playgroundDirectory);
+    const absolutePath = path.resolve(root, requestedPath);
+    if (absolutePath !== root && !absolutePath.startsWith(`${root}${path.sep}`)) {
+      await reply.code(404).send();
+      return;
+    }
+
+    try {
+      const fileStat = await stat(absolutePath);
+      if (!fileStat.isFile()) {
+        await reply.code(404).send();
+        return;
+      }
+      const extension = path.extname(absolutePath).toLowerCase();
+      await reply
+        .header("Cache-Control", extension === ".html" ? "no-store" : "no-cache")
+        .type(MIME_TYPES[extension] ?? "application/octet-stream")
+        .send(await readFile(absolutePath));
+    } catch {
+      await reply.code(404).send();
+    }
+  }
+
+  app.get("/playground", servePlayground);
+  app.get("/playground/", servePlayground);
+  app.get("/playground/*", servePlayground);
 
   app.post("/v1/render", { preHandler: authenticate }, renderOrReply);
   app.post("/v1/validate", { preHandler: authenticate }, async (request, reply) => {

@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import { createGateway } from "../dist/app.js";
@@ -41,6 +44,29 @@ test("health is public while rendering requires a valid bearer token", async () 
   assert.equal(unauthorized.json().code, "UNAUTHORIZED");
   assert.ok(unauthorized.json().requestId);
   await app.close();
+});
+
+test("serves the playground app without requiring API authentication", async () => {
+  const playgroundDirectory = await mkdtemp(path.join(tmpdir(), "diagram-playground-"));
+  await writeFile(path.join(playgroundDirectory, "index.html"), "<!doctype html><title>Diagram as Code Playground</title>");
+  await writeFile(path.join(playgroundDirectory, "app.js"), "console.log('playground');");
+  const app = createGateway({ config, renderer: renderer(), playgroundDirectory });
+
+  const index = await app.inject({ method: "GET", url: "/playground" });
+  const indexWithSlash = await app.inject({ method: "GET", url: "/playground/" });
+  const asset = await app.inject({ method: "GET", url: "/playground/app.js" });
+  const traversal = await app.inject({ method: "GET", url: "/playground/../package.json" });
+
+  assert.equal(index.statusCode, 200);
+  assert.match(index.headers["content-type"] ?? "", /^text\/html/);
+  assert.match(index.body, /Diagram as Code Playground/);
+  assert.equal(indexWithSlash.statusCode, 200);
+  assert.equal(asset.statusCode, 200);
+  assert.match(asset.headers["content-type"] ?? "", /javascript/);
+  assert.equal(asset.headers["cache-control"], "no-cache");
+  assert.equal(traversal.statusCode, 404);
+  await app.close();
+  await rm(playgroundDirectory, { recursive: true, force: true });
 });
 
 test("renders an SVG with observable response headers", async () => {

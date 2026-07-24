@@ -8,9 +8,14 @@ COPY packages/diagram-config/package.json packages/diagram-config/tsconfig.json 
 COPY packages/diagram-config/src ./packages/diagram-config/src
 COPY gateway/package.json gateway/tsconfig.json ./gateway/
 COPY gateway/src ./gateway/src
+COPY playground/package.json ./playground/package.json
+COPY playground/scripts ./playground/scripts
+COPY playground/src ./playground/src
 COPY scripts ./scripts
 
-RUN npm ci && npm --workspace=@diagram-as-code/gateway run build
+RUN npm ci \
+  && npm --workspace=diagram-as-code-playground run build \
+  && npm --workspace=@diagram-as-code/gateway run build
 
 FROM node:24-alpine AS runtime
 
@@ -22,6 +27,7 @@ COPY --from=build /app/packages/contracts/package.json ./packages/contracts/pack
 COPY --from=build /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build /app/gateway/package.json ./gateway/package.json
 COPY --from=build /app/gateway/dist ./gateway/dist
+COPY --from=build /app/playground/dist ./playground/dist
 COPY --from=build /app/scripts ./scripts
 
 USER node
