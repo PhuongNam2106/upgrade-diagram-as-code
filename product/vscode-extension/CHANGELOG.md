@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Bundle the browser Playground with the local Gateway server.
+- Keep the extension workflow and Marketplace identity unchanged.
+- Use the Windows Server `0.3.0` package when running the local Gateway.
+
 ## 0.2.1
 
 - Align the extension package with the `0.2.1` product patch release.

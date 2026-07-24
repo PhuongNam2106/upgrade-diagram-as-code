@@ -43,7 +43,7 @@ jobs:
                 compose=true
                 windows=true
                 ;;
-              product/deploy/*|product/gateway/*|product/packages/contracts/*|product/scripts/smoke-test.mjs|product/scripts/determinism-test.mjs|product/package.json|product/package-lock.json|product/tsconfig.base.json)
+              product/deploy/*|product/gateway/*|product/playground/*|product/packages/contracts/*|product/scripts/smoke-test.mjs|product/scripts/determinism-test.mjs|product/package.json|product/package-lock.json|product/tsconfig.base.json)
                 compose=true
                 ;;
             esac

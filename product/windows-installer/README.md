@@ -41,7 +41,7 @@ The extension stores the key in VS Code SecretStorage.
 | `status` | Show the running and readiness state. |
 | `logs -Tail 200` | Show recent container logs. |
 | `restart` | Restart the managed stack and wait for readiness. |
-| `update -Version 0.2.1` | Download, verify, apply, and health-check a release. |
+| `update -Version 0.3.0` | Download, verify, apply, and health-check a release. |
 | `show-key` | Print the newest configured API key. |
 | `rotate-key` | Add a new key while retaining the previous key temporarily. |
 | `rotate-key -Finalize` | Remove the previous key after clients have been updated. |

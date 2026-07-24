@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Diagram as Code Playground</title>
+    <link rel="stylesheet" href="/playground/styles.css">
+    <script type="module" src="/playground/app.js"></script>
+  </head>
+  <body>
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Diagram as Code</p>
+          <h1>Playground</h1>
+        </div>
+        <div class="connection">
+          <label for="apiKey">API key</label>
+          <input id="apiKey" name="apiKey" type="password" autocomplete="off" placeholder="Bearer key">
+          <button id="saveKey" type="button">Save</button>
+        </div>
+      </header>
+
+      <section class="tool-grid">
+        <form class="editor-panel" id="renderForm">
+          <div class="toolbar">
+            <label for="diagramType">Type</label>
+            <select id="diagramType" name="diagramType">
+              <option value="mermaid">Mermaid</option>
+              <option value="plantuml">PlantUML</option>
+              <option value="graphviz">Graphviz/DOT</option>
+              <option value="d2">D2</option>
+            </select>
+            <button id="renderButton" type="submit">Render</button>
+          </div>
+          <textarea id="diagramSource" spellcheck="false" aria-label="Diagram source"></textarea>
+        </form>
+
+        <section class="preview-panel" aria-live="polite">
+          <div class="toolbar">
+            <span id="statusText" class="status">Ready</span>
+            <button id="copyMarkdown" type="button" disabled>Copy Markdown</button>
+            <button id="copySvg" type="button" disabled>Copy SVG</button>
+            <button id="exportSvg" type="button" disabled>Export SVG</button>
+          </div>
+          <div class="preview-shell">
+            <img id="previewImage" alt="Rendered diagram preview">
+            <pre id="errorBox" hidden></pre>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

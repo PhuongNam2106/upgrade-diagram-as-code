@@ -1,6 +1,6 @@
 {
   "name": "@diagram-as-code/gateway",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -16,7 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@diagram-as-code/contracts": "0.2.1",
+    "@diagram-as-code/contracts": "0.3.0",
     "fastify": "^5.6.0",
     "zod": "^4.1.0"
   }

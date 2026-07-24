@@ -3,6 +3,7 @@
 Lớp sản phẩm này bổ sung workflow hoàn chỉnh quanh fork Kroki mà không trộn code tùy biến vào module upstream:
 
 - `gateway`: Fastify API có API key, validation, timeout, LRU và single-flight.
+- `playground`: giao diện web thử diagram trực tiếp qua Gateway.
 - `vscode-extension`: live preview và export SVG thủ công, ổn định.
 - `github-action`: kiểm tra SVG đã commit có khớp source trên pull request.
 - `deploy`: Compose self-hosted, chỉ expose Gateway.
@@ -15,11 +16,11 @@ Người mới có thể xem tài liệu từng bước tại
 ### 1. Cài server và extension
 
 1. Mở Docker Desktop.
-2. Giải nén `diagram-as-code-server-0.2.1.zip` và chạy
+2. Giải nén `diagram-as-code-server-0.3.0.zip` và chạy
    `powershell -ExecutionPolicy Bypass -File .\diagram-server.ps1 install` trong
    thư mục `server`.
 3. Ghi lại Gateway URL `http://localhost:9000` và API key do installer tạo.
-4. Cài `diagram-as-code-vscode-0.2.1.vsix` bằng chức năng
+4. Cài `diagram-as-code-vscode-0.3.0.vsix` bằng chức năng
    **Extensions > Install from VSIX...** của VS Code.
 
 ### 2. Cấu hình dự án
@@ -57,7 +58,19 @@ Mở một file sơ đồ, nhấn `Ctrl + Shift + P`, chạy
 `Diagram: Set Gateway API Key` và dán API key do installer tạo. Extension lưu key
 trong VS Code SecretStorage; không ghi API key vào source hoặc commit lên Git.
 
-### 4. Preview và Export
+### 4. Thử nhanh bằng Playground
+
+Sau khi server có trạng thái `Ready`, mở:
+
+```text
+http://localhost:9000/playground
+```
+
+Dán API key, chọn loại sơ đồ, nhập source rồi bấm **Render**. Playground dùng cùng
+Gateway với VS Code extension, nên đây là cách nhanh để kiểm tra server, thử cú pháp
+Mermaid/PlantUML/Graphviz/D2 và export SVG mà không cần tạo project trước.
+
+### 5. Preview và Export
 
 - Bấm **Preview** để xem sơ đồ bên cạnh trình soạn thảo.
 - Khi Preview đang mở, `Ctrl + S` cập nhật bản xem trước nhưng không tạo thêm file
@@ -76,14 +89,14 @@ cũ so với source.
 
 Cài `phuongnam.diagram-as-code-vscode` từ **Visual Studio Marketplace** khi bản
 Marketplace đã được phát hành, hoặc tải file VSIX từ
-[GitHub Release product-v0.2.1](https://github.com/PhuongNam2106/upgrade-diagram-as-code/releases/tag/product-v0.2.1).
+[GitHub Release product-v0.3.0](https://github.com/PhuongNam2106/upgrade-diagram-as-code/releases/tag/product-v0.3.0).
 Sau đó cấu hình Gateway URL và chạy `Diagram: Set Gateway API Key` một lần.
 Extension cung cấp nút Preview và Export trên editor của các file sơ đồ được hỗ
 trợ.
 
 ### Windows Server
 
-Máy Windows cần Docker Desktop đang chạy. Tải `diagram-as-code-server-0.2.1.zip` từ GitHub Release `product-v0.2.1`, giải nén rồi chạy:
+Máy Windows cần Docker Desktop đang chạy. Tải `diagram-as-code-server-0.3.0.zip` từ GitHub Release `product-v0.3.0`, giải nén rồi chạy:
 
 ```powershell
 .\diagram-server.ps1 install
@@ -103,4 +116,4 @@ Các quy trình TLS, key rotation, update và rollback nằm trong [Infrastructu
 
 ## Phạm vi MVP
 
-MVP chỉ nhận `.mmd`, `.puml`, `.dot`, `.d2` và chỉ tạo SVG. Không tự quét source code ứng dụng để suy ra kiến trúc, không tự export khi save, không tự commit từ CI, và chưa có playground, database, Redis hay SaaS billing.
+MVP chỉ nhận `.mmd`, `.puml`, `.dot`, `.d2` và chỉ tạo SVG. Không tự quét source code ứng dụng để suy ra kiến trúc, không tự export khi save, không tự commit từ CI, và chưa có database, Redis hay SaaS billing.

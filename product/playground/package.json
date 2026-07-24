@@ -1,0 +1,11 @@
+{
+  "name": "diagram-as-code-playground",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "node scripts/check-source.mjs"
+  }
+}
