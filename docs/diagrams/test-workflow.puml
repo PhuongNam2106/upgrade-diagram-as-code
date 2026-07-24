@@ -3,7 +3,7 @@ title Diagram as Code - Luồng Preview và Export
 
 autonumber
 
-actor "Nguyễn Nam" as User
+actor "Nguyễn Nam Test 2ND" as User
 participant "VS Code Extension" as Extension
 participant "Gateway" as Gateway
 participant "Kroki / PlantUML" as Renderer
@@ -12,7 +12,7 @@ User -> Extension: Mở file test-workflow.puml
 User -> Extension: Bấm Preview
 Extension -> Gateway: POST /v1/render\n(type: plantuml, format: svg)
 Gateway -> Renderer: Gửi mã PlantUML
-Renderer --> Gateway: Trả về ảnh SVG
+Renderer --> Gateway: Trả về ảnh SVG Test workflow
 Gateway --> Extension: Trả về ảnh SVG
 Extension --> User: Hiển thị bản xem trước
 
